@@ -1,0 +1,80 @@
+# Backward Chaining in Python for Horn Clauses
+
+# Knowledge Base: facts and rules
+facts = {
+    ("vertebrate", "duck"),
+    ("flying", "duck"),
+    ("mammal", "cat")
+}
+
+# Rules stored as: ( [premises], conclusion )
+rules = [
+    ([("mammal", "A")], ("vertebrate", "A")),
+    ([("vertebrate", "A")], ("animal", "A")),
+    ([("vertebrate", "A"), ("flying", "A")], ("bird", "A")),
+]
+
+def unify(var, value, substitution):
+    if var in substitution:
+        return substitution if substitution[var] == value else None
+    new_sub = substitution.copy()
+    new_sub[var] = value
+    return new_sub
+
+def substitute(fact, substitution):
+    pred, arg = fact
+    if arg in substitution:
+        return (pred, substitution[arg])
+    return fact
+
+def backward_chain(goal, visited=set(), substitution={}):
+    pred, arg = goal
+    
+    # Stop infinite loops
+    if goal in visited:
+        return False
+    visited.add(goal)
+
+    # Check if goal matches known facts
+    for f in facts:
+        f_pred, f_arg = f
+        if f_pred == pred:
+            # unify if variable
+            if arg.isalpha():
+                new_sub = unify(arg, f_arg, substitution)
+                if new_sub is not None:
+                    return True
+            elif arg == f_arg:
+                return True
+
+    # Try rules
+    for premises, conclusion in rules:
+        c_pred, c_arg = conclusion
+        if c_pred == pred:
+            # Try to unify arguments
+            new_sub = substitution.copy()
+            if c_arg.isalpha():
+                new_sub = unify(c_arg, arg, new_sub)
+                if new_sub is None:
+                    continue
+            elif c_arg != arg:
+                continue
+
+            # Check premises recursively
+            if all(backward_chain(substitute(p, new_sub), visited, new_sub) for p in premises):
+                return True
+
+    return False
+
+
+# Test the backward chainer
+queries = [
+    ("animal", "duck"),
+    ("bird", "duck"),
+    ("animal", "cat"),
+    ("bird", "cat"),
+    ("vertebrate", "cat")
+]
+
+for q in queries:
+    print(f"Query {q}: {'YES ✅' if backward_chain(q) else 'NO ❌'}")
