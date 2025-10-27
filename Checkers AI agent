@@ -1,0 +1,80 @@
+import math
+
+EMPTY, RED, BLACK = ".", "r", "b"
+
+def init_board():
+    b = [[EMPTY]*8 for _ in range(8)]
+    for r in range(3):
+        for c in range(8):
+            if (r+c)%2: b[r][c]=BLACK
+    for r in range(5,8):
+        for c in range(8):
+            if (r+c)%2: b[r][c]=RED
+    return b
+
+def print_board(b):
+    for r in b: print(" ".join(r))
+    print()
+
+def opp(p): return RED if p==BLACK else BLACK
+
+def moves(b,p):
+    m=[]
+    for r in range(8):
+        for c in range(8):
+            if b[r][c]==p:
+                for dr,dc in [(1,-1),(1,1),(-1,-1),(-1,1)]:
+                    nr,nc=r+dr,c+dc
+                    if 0<=nr<8 and 0<=nc<8 and b[nr][nc]==EMPTY:
+                        m.append(((r,c),(nr,nc)))
+    return m
+
+def make(b,m):
+    (r,c),(nr,nc)=m
+    p=b[r][c]
+    b[r][c]=EMPTY
+    b[nr][nc]=p
+
+def score(b,p):
+    return sum(1 if q==p else -1 for r in b for q in r if q!=EMPTY)
+
+def minimax(b,d,a,l,p,maxp):
+    ms=moves(b,p)
+    if d==0 or not ms: return score(b,maxp),None
+    best=None
+    if p==maxp:
+        v=-math.inf
+        for m in ms:
+            bb=[r[:]for r in b];make(bb,m)
+            s,_=minimax(bb,d-1,a,l,opp(p),maxp)
+            if s>v:v,best=s,m
+            a=max(a,v)
+            if l<=a:break
+        return v,best
+    v=math.inf
+    for m in ms:
+        bb=[r[:]for r in b];make(bb,m)
+        s,_=minimax(bb,d-1,a,l,opp(p),maxp)
+        if s<v:v,best=s,m
+        l=min(l,v)
+        if l<=a:break
+    return v,best
+
+def play():
+    b=init_board()
+    p=RED
+    while True:
+        print_board(b)
+        ms=moves(b,p)
+        if not ms:
+            print(opp(p),"wins")
+            break
+        if p==RED: _,m=minimax(b,3,-math.inf,math.inf,p,p)
+        else:
+            print("Moves:",ms)
+            i=int(input("index: "))
+            m=ms[i]
+        make(b,m)
+        p=opp(p)
+
+play()
