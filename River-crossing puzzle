@@ -1,0 +1,50 @@
+from collections import deque
+
+# State Format: (MissionariesLeft, CannibalsLeft, BoatSide)
+# BoatSide: 'L' or 'R'
+
+start = (3, 3, 'L')
+goal = (0, 0, 'R')
+
+# Possible moves (M, C)
+moves = [(1, 0), (2, 0), (0, 1), (0, 2), (1, 1)]
+
+
+def is_valid(m, c):
+    if m < 0 or m > 3 or c < 0 or c > 3:
+        return False
+    if (m > 0 and c > m):
+        return False
+    if (3 - m > 0 and 3 - c > (3 - m)):
+        return False
+    return True
+
+
+def bfs():
+    queue = deque([(start, [start])])
+    visited = set([start])
+
+    while queue:
+        (m, c, side), path = queue.popleft()
+
+        if (m, c, side) == goal:
+            return path
+
+        for mv in moves:
+            dm, dc = mv
+            if side == 'L':  
+                new_state = (m - dm, c - dc, 'R')
+            else:
+                new_state = (m + dm, c + dc, 'L')
+
+            nm, nc, _ = new_state
+
+            if is_valid(nm, nc) and new_state not in visited:
+                visited.add(new_state)
+                queue.append((new_state, path + [new_state]))
+
+
+solution = bfs()
+print("Solution Path:")
+for s in solution:
+    print(s)
