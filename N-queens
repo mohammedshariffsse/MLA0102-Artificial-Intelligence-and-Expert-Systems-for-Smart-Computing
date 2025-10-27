@@ -1,0 +1,73 @@
+import random
+
+def calculate_cost(state):
+    cost = 0
+    n = len(state)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if state[i] == state[j] or abs(state[i] - state[j]) == abs(i - j):
+                cost += 1
+    return cost
+
+def get_best_neighbor(state):
+    n = len(state)
+    best_state = state[:]
+    best_cost = calculate_cost(state)
+
+    for col in range(n):
+        original_row = state[col]
+        for row in range(n):
+            if row != original_row:
+                new_state = state[:]
+                new_state[col] = row
+                cost = calculate_cost(new_state)
+                if cost < best_cost:
+                    best_cost = cost
+                    best_state = new_state[:]
+    return best_state, best_cost
+
+def hill_climbing(n):
+    current_state = [random.randint(0, n - 1) for _ in range(n)]
+    current_cost = calculate_cost(current_state)
+
+    while True:
+        neighbor_state, neighbor_cost = get_best_neighbor(current_state)
+        if neighbor_cost < current_cost:
+            current_state = neighbor_state
+            current_cost = neighbor_cost
+        else:
+            break
+
+    return current_state, current_cost
+
+def solve_n_queens(n, restarts=5):
+    best_final_state = None
+    best_final_cost = float("inf")
+
+    for _ in range(restarts):
+        state, cost = hill_climbing(n)
+        if cost < best_final_cost:
+            best_final_cost = cost
+            best_final_state = state
+        if cost == 0:
+            break
+    
+    return best_final_state, best_final_cost
+
+def print_board(state):
+    n = len(state)
+    for row in range(n):
+        line = ""
+        for col in range(n):
+            line += "Q " if state[col] == row else ". "
+        print(line)
+    print()
+
+# Run for N = 8 (change N as needed)
+N = 8
+solution, cost = solve_n_queens(N)
+
+print("Final Board:")
+print_board(solution)
+print("Final Cost:", cost)
+print("Solution Found:", "YES ✅" if cost == 0 else "NO ❌")
